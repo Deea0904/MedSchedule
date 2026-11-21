@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programare înregistrată</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top"><strong>MedSchedule</strong></header>
+<main class="center">
+  <h1>Programare înregistrată</h1>
+  <p class="sub">Vei primi emailul de confirmare în aproximativ 15 minute, iar cu o zi înainte, o reamintire.</p>
+  <div class="rezumat">
+    <span>ID programare</span><b>{{ p.id }}</b>
+    <span>Pacient</span><b>{{ p.nume }}</b>
+    <span>Medic</span><b>{{ p.medic }} ({{ p.specialitate }})</b>
+    <span>Data și ora</span><b>{{ p.data }} · {{ p.ora }}</b>
+  </div>
+  <a class="btn" href="{{ url_for('index') }}">Înapoi la pagina principală</a>
+</main>
+</body>
+</html>

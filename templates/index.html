@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedSchedule</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top"><strong>MedSchedule</strong></header>
+<main>
+  <h1>Programează o consultație</h1>
+  <p class="sub">Vezi doar intervalele libere. Primești confirmarea pe email.</p>
+
+  {% if erori %}
+  <div class="erori"><ul>{% for e in erori %}<li>{{ e }}</li>{% endfor %}</ul></div>
+  {% endif %}
+
+  <section>
+    <h2>1. Specialitate</h2>
+    <div class="chips">
+      {% for s in specialitati %}
+      <a class="chip {{ 'on' if s == spec }}" href="{{ url_for('index', spec=s) }}">{{ s }}</a>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% if spec %}
+  <section>
+    <h2>2. Medic</h2>
+    <div class="chips">
+      {% for m in medici %}
+      <a class="chip {{ 'on' if m.id == medic_id }}" href="{{ url_for('index', spec=spec, medic=m.id) }}">{{ m.nume }} · {{ m.durata_min }} min</a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if medic_id %}
+  <section>
+    <h2>3. Data și ora</h2>
+    <div class="chips">
+      {% for z in zile %}
+        {% if z.libere %}
+        <a class="chip day {{ 'on' if z.iso == data }}" href="{{ url_for('index', spec=spec, medic=medic_id, data=z.iso) }}">{{ z.zi }}<br><b>{{ z.nr }}</b></a>
+        {% else %}
+        <span class="chip day off">{{ z.zi }}<br><b>{{ z.nr }}</b></span>
+        {% endif %}
+      {% endfor %}
+    </div>
+    <p class="hint">Zilele estompate nu au intervale libere. Poți programa cu maximum 14 zile înainte.</p>
+
+    {% if data %}
+    <form method="post" action="{{ url_for('programeaza') }}">
+      <input type="hidden" name="spec" value="{{ spec }}">
+      <input type="hidden" name="medic" value="{{ medic_id }}">
+      <input type="hidden" name="data" value="{{ data }}">
+
+      <div class="slots">
+        {% for s in sloturi %}
+        <label class="slot"><input type="radio" name="ora" value="{{ s }}" {{ 'checked' if form.get('ora') == s }} required><span>{{ s }}</span></label>
+        {% else %}
+        <p>Nu mai sunt intervale libere în această zi.</p>
+        {% endfor %}
+      </div>
+
+      {% if sloturi %}
+      <h2>4. Datele tale</h2>
+      <div class="grid">
+        <label>Nume complet<input name="nume" value="{{ form.get('nume', '') }}" required></label>
+        <label>Data nașterii<input type="date" name="data_nasterii" value="{{ form.get('data_nasterii', '') }}" required></label>
+        <label>Telefon<input name="telefon" value="{{ form.get('telefon', '') }}" required></label>
+        <label>Email<input type="email" name="email" value="{{ form.get('email', '') }}" required></label>
+        <label class="full">Motivul consultației (opțional)<input name="motiv" value="{{ form.get('motiv', '') }}"></label>
+      </div>
+      <label class="gdpr"><input type="checkbox" name="gdpr" value="1" required> Sunt de acord cu prelucrarea datelor personale conform GDPR.</label>
+      <button class="btn" type="submit">Confirmă programarea</button>
+      {% endif %}
+    </form>
+    {% endif %}
+  </section>
+  {% endif %}
+</main>
+</body>
+</html>
