@@ -1,3 +1,4 @@
+import secrets
 import sqlite3
 from datetime import date, datetime, time, timedelta
 
@@ -159,9 +160,10 @@ def programeaza():
     try:
         cur = db.execute(
             """INSERT INTO Programari
-               (medic_id, data, ora, nume, data_nasterii, telefon, email, motiv, acord_gdpr, status)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 'Nou')""",
-            (medic_id, data, ora, nume, nastere, telefon, email, motiv or None),
+               (medic_id, data, ora, nume, data_nasterii, telefon, email, motiv, acord_gdpr, status, token)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 'Nou', ?)""",
+            (medic_id, data, ora, nume, nastere, telefon, email, motiv or None,
+             secrets.token_urlsafe(16)),
         )
         db.commit()
     except sqlite3.IntegrityError:
@@ -180,6 +182,60 @@ def confirmare(id):
     if p is None:
         return redirect(url_for("index"))
     return render_template("confirmare.html", p=p)
+
+
+def programare_dupa_token(token):
+    return get_db().execute(
+        """SELECT p.id, p.data, p.ora, p.status, p.raspuns_pacient, p.token,
+                  m.nume AS medic
+           FROM Programari p JOIN Medici m ON m.id = p.medic_id
+           WHERE p.token = ?""",
+        (token,),
+    ).fetchone()
+
+
+def mesaj(titlu, text, p=None, buton_anulare=False, cod=200):
+    return render_template("raspuns.html", titlu=titlu, text=text, p=p,
+                           buton_anulare=buton_anulare), cod
+
+
+@app.route("/confirma/<token>")
+def confirma(token):
+    p = programare_dupa_token(token)
+    if p is None:
+        return mesaj("Link invalid", "Linkul nu este valid sau a expirat.", cod=404)
+    if p["status"] == "Anulata":
+        return mesaj("Programare anulată", "Această programare a fost anulată și nu mai poate fi confirmată.", p)
+    if p["data"] < date.today().isoformat():
+        return mesaj("Programare expirată", "Data programării a trecut.", p)
+    db = get_db()
+    db.execute("UPDATE Programari SET raspuns_pacient = 'Confirmat', status = 'Confirmata', "
+        "confirmat_la = datetime('now') WHERE id = ?", (p["id"],))
+    db.commit()
+    return mesaj("Prezența a fost confirmată", "Mulțumim! Te așteptăm la clinică.", p)
+
+
+@app.route("/anuleaza/<token>", methods=["GET", "POST"])
+def anuleaza(token):
+    p = programare_dupa_token(token)
+    if p is None:
+        return mesaj("Link invalid", "Linkul nu este valid sau a expirat.", cod=404)
+    if p["status"] == "Anulata":
+        return mesaj("Programare deja anulată", "Această programare este deja anulată.", p)
+    if p["data"] < date.today().isoformat():
+        return mesaj("Programare expirată", "Data programării a trecut.", p)
+    if request.method == "GET":
+        # pagina de confirmare: evitam anularea accidentala (ex. scanere de email)
+        return mesaj("Anulezi programarea?", "Apasă butonul pentru a anula definitiv programarea.",
+                     p, buton_anulare=True)
+    db = get_db()
+    db.execute(
+        "UPDATE Programari SET status = 'Anulata', raspuns_pacient = 'Anulat', "
+        "anulare_procesata = 0 WHERE id = ?",
+        (p["id"],),
+    )
+    db.commit()
+    return mesaj("Programarea a fost anulată", "Intervalul a fost eliberat. Poți face o nouă programare oricând.", p)
 
 
 if __name__ == "__main__":

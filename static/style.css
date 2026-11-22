@@ -29,3 +29,4 @@ input:not([type=radio]):not([type=checkbox]){height:46px;border:1px solid #B8CFD
 .rezumat{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;text-align:left;background:#F2FAFA;border-radius:12px;padding:20px;margin:0 auto 24px;max-width:480px}
 .rezumat span{color:#4A646D}
 @media(max-width:640px){.grid{grid-template-columns:1fr}.grid .full{grid-column:1}}
+.btn.danger{background:#B3261E}
