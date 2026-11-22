@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ titlu }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="top"><strong>MedSchedule</strong></header>
+<main class="center">
+  <h1>{{ titlu }}</h1>
+  <p class="sub">{{ text }}</p>
+  {% if p %}
+  <div class="rezumat">
+    <span>ID programare</span><b>{{ p.id }}</b>
+    <span>Medic</span><b>{{ p.medic }}</b>
+    <span>Data și ora</span><b>{{ p.data }} · {{ p.ora }}</b>
+  </div>
+  {% endif %}
+  {% if buton_anulare %}
+  <form method="post"><button class="btn danger" type="submit">Da, anulează programarea</button></form>
+  {% endif %}
+</main>
+</body>
+</html>

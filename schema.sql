@@ -46,13 +46,18 @@ CREATE TABLE Programari (
 
     -- campuri folosite de robot
     status          TEXT    NOT NULL DEFAULT 'Nou'
-                    CHECK (status IN ('Nou', 'In procesare', 'Confirmata',
+                    CHECK (status IN ('Nou', 'In procesare', 'Email trimis', 'Confirmata',
                                       'Necesita revizuire', 'Eroare', 'Anulata')),
     urgent          INTEGER NOT NULL DEFAULT 0 CHECK (urgent IN (0, 1)),
     motiv_eroare    TEXT,
     reminder_trimis INTEGER NOT NULL DEFAULT 0 CHECK (reminder_trimis IN (0, 1)),
     creat_la        TEXT    NOT NULL DEFAULT (datetime('now')),
-    confirmat_la    TEXT
+    confirmat_la    TEXT,
+
+    -- confirmare / anulare de catre pacient (linkuri din email)
+    token             TEXT    NOT NULL UNIQUE,
+    raspuns_pacient   TEXT    CHECK (raspuns_pacient IN ('Confirmat', 'Anulat')),
+    anulare_procesata INTEGER NOT NULL DEFAULT 0 CHECK (anulare_procesata IN (0, 1))
 );
 
 -- Blocheaza dublurile pe acelasi slot; o programare anulata elibereaza slotul
